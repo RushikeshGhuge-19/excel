@@ -1,17 +1,12 @@
 """
-Garment Spec Sheet OCR Extractor — FastAPI Backend
-Handles image upload, Mistral API processing, Excel export.
+Garment Spec Sheet OCR Extractor — Streamlit App
+Upload image → two-pass OCR extraction → download Excel
 """
 
+import streamlit as st
 import os, re, json, io, time, base64
 from pathlib import Path
-from typing import Optional
 from datetime import datetime
-
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 import requests
 from PIL import Image, ImageEnhance
@@ -21,40 +16,21 @@ from openpyxl.utils import get_column_letter
 
 # ── Config ───────────────────────────────────────────────────────────────────
 
-API_KEY = os.getenv("MISTRAL_API_KEY", "")  # Set via env var
+st.set_page_config(
+    page_title="Garment Spec OCR",
+    page_icon="📊",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+API_KEY = os.getenv("MISTRAL_API_KEY", "")
 MODEL = "pixtral-large-2411"
 MAX_TOKENS = 16000
 TIMEOUT_SEC = 300
 MAX_RETRIES = 3
 
-UPLOAD_DIR = Path("./uploads")
 OUTPUT_DIR = Path("./outputs")
-UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
-
-app = FastAPI(
-    title="Garment Spec OCR",
-    description="Extract garment measurement specs from photos",
-    version="3.0"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ── Models ───────────────────────────────────────────────────────────────────
-
-class ExtractionStatus(BaseModel):
-    status: str
-    message: str
-    job_id: Optional[str] = None
-    progress: Optional[dict] = None
-    excel_url: Optional[str] = None
-    error: Optional[str] = None
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
