@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-API_KEY = os.getenv("MISTRAL_API_KEY", "")
+API_KEY = os.getenv("MISTRAL_API_KEY", "o5RwmxtgR18zW6ppUffmrSrEPRdEay39")
 MODEL = "pixtral-large-2411"
 MAX_TOKENS = 16000
 TIMEOUT_SEC = 300
